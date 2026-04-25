@@ -117,8 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($_POST['action'] === 'approve_review' && isLoggedIn()) {
             $review_id = intval($_POST['review_id']);
             $pdo = getDB();
-            $stmt = $pdo->prepare('UPDATE reviews SET status = "approved" WHERE id = ?');
-            $stmt->execute([$review_id]);
+            $stmt = $pdo->prepare('UPDATE reviews SET status = "approved" WHERE id = ? AND site_id IN (SELECT id FROM sites WHERE user_id = ?)');
+            $stmt->execute([$review_id, $_SESSION['user_id']]);
             $success = 'Avis approuvé';
         }
         

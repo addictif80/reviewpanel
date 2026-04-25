@@ -1,9 +1,9 @@
 <?php
 require_once 'config.php';
 
-function runMigrations() {
+function runMigrationsCLI() {
     $pdo = getDB();
-    
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS migrations (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -11,15 +11,15 @@ function runMigrations() {
             executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ");
-    
+
     $migrations = [
         '001_add_auto_approve' => "ALTER TABLE widgets ADD COLUMN auto_approve TINYINT(1) DEFAULT 0"
     ];
-    
+
     foreach ($migrations as $name => $sql) {
         $stmt = $pdo->prepare('SELECT id FROM migrations WHERE name = ?');
         $stmt->execute([$name]);
-        
+
         if (!$stmt->fetch()) {
             try {
                 $pdo->exec($sql);
@@ -37,8 +37,8 @@ function runMigrations() {
             }
         }
     }
-    
+
     echo "Migrations terminées!\n";
 }
 
-runMigrations();
+runMigrationsCLI();

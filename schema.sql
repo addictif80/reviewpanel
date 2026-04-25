@@ -58,10 +58,10 @@ CREATE TABLE IF NOT EXISTS settings (
     setting_value TEXT
 );
 
--- Admin default account (password: admin123)
-INSERT INTO users (email, password, name, role) VALUES 
+-- Admin default account (password: password) - CHANGE BEFORE PRODUCTION
+INSERT INTO users (email, password, name, role) VALUES
 ('admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'admin');
 
--- Sample user (password: user123)
-INSERT INTO users (email, password, name, role) VALUES 
+-- Sample user (password: password) - CHANGE BEFORE PRODUCTION
+INSERT INTO users (email, password, name, role) VALUES
 ('user@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Demo User', 'user');

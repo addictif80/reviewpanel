@@ -1,12 +1,12 @@
 <?php
 session_start();
 
+$step = intval($_GET['step'] ?? 1);
+
 if (file_exists('config.php') && $step < 5) {
     header('Location: index.php');
     exit;
 }
-
-$step = $_GET['step'] ?? 1;
 $error = '';
 $success = '';
 
@@ -30,8 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db_user = $_POST['db_user'];
         $db_pass = $_POST['db_pass'];
         
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $db_name)) {
+            $error = 'Nom de base de données invalide (lettres, chiffres et _ uniquement)';
+        } else {
         list($ok, $msg) = testMySQL($db_host, $db_user, $db_pass);
-        
+
         if ($ok) {
             try {
                 $pdo = new PDO("mysql:host=$db_host", $db_user, $db_pass);
@@ -98,8 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = 'Connexion MySQL échouée: ' . $msg;
         }
+        } // end db_name validation
     }
-    
+
     if ($step == 3) {
         $admin_email = $_POST['admin_email'];
         $admin_pass = $_POST['admin_pass'];

@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token) {
             $hash = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare('UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?');
             $stmt->execute([$hash, $user['id']]);
-            $success = 'Mot de passe réinitialisé ! <a href="index.php">Se connecter</a>';
+            $success = 'Mot de passe réinitialisé !';
         } else {
             $error = 'Token invalide ou expiré';
         }
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token) {
                 <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
             <?php if ($success): ?>
-                <div class="alert alert-success"><?= $success ?></div>
+                <div class="alert alert-success"><?= htmlspecialchars($success) ?> <a href="index.php">Se connecter</a></div>
             <?php else: ?>
                 <form method="POST">
                     <input type="password" name="password" placeholder="Nouveau mot de passe" required minlength="6">

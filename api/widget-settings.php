@@ -1,9 +1,16 @@
 <?php
-require_once 'config.php';
+session_start();
+require_once __DIR__ . '/../config.php';
 
 header('Content-Type: application/json');
 
-$siteId = $_GET['site_id'] ?? 0;
+if (!isLoggedIn()) {
+    http_response_code(401);
+    echo json_encode(['auto_approve' => 0]);
+    exit;
+}
+
+$siteId = intval($_GET['site_id'] ?? 0);
 
 if (!$siteId) {
     echo json_encode(['auto_approve' => 0]);

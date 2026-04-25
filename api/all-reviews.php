@@ -1,10 +1,16 @@
 <?php
-require_once 'config.php';
+session_start();
+require_once __DIR__ . '/../config.php';
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
 
-$siteId = $_GET['site_id'] ?? 0;
+if (!isLoggedIn()) {
+    http_response_code(401);
+    echo json_encode([]);
+    exit;
+}
+
+$siteId = intval($_GET['site_id'] ?? 0);
 
 if (!$siteId) {
     echo json_encode([]);
@@ -13,8 +19,8 @@ if (!$siteId) {
 
 try {
     $pdo = getDB();
-    $stmt = $pdo->prepare('SELECT * FROM reviews WHERE site_id = ? ORDER BY created_at DESC');
-    $stmt->execute([intval($siteId)]);
+    $stmt = $pdo->prepare('SELECT * FROM reviews WHERE site_id = ? AND site_id IN (SELECT id FROM sites WHERE user_id = ?) ORDER BY created_at DESC');
+    $stmt->execute([$siteId, $_SESSION['user_id']]);
     $reviews = $stmt->fetchAll();
     echo json_encode($reviews);
 } catch (Exception $e) {

@@ -221,9 +221,18 @@ function renderWidgetPreview(siteId, reviews) {
 
 function copyEmbedCode() {
     const textarea = document.getElementById('embedCode');
-    textarea.select();
-    document.execCommand('copy');
-    showNotification('Code copié dans le presse-papiers');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            showNotification('Code copié dans le presse-papiers');
+        }).catch(() => {
+            textarea.select();
+            showNotification('Erreur lors de la copie');
+        });
+    } else {
+        textarea.select();
+        document.execCommand('copy');
+        showNotification('Code copié dans le presse-papiers');
+    }
 }
 
 function escapeHtml(text) {
