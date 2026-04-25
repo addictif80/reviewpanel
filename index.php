@@ -125,8 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($_POST['action'] === 'delete_review' && isLoggedIn()) {
             $review_id = intval($_POST['review_id']);
             $pdo = getDB();
-            $stmt = $pdo->prepare('DELETE FROM reviews WHERE id = ?');
-            $stmt->execute([$review_id]);
+            
+            $stmt = $pdo->prepare('DELETE FROM reviews r WHERE r.id = ? AND r.site_id IN (SELECT id FROM sites WHERE user_id = ?)');
+            $stmt->execute([$review_id, $_SESSION['user_id']]);
             $success = 'Avis supprimé';
         }
         
