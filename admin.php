@@ -160,19 +160,50 @@ foreach ($settingsArr as $s) {
         </table>
     </div>
 
+    <!-- Modal: Test Email -->
+    <div id="modal-testEmail" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('modal-testEmail').classList.remove('active')">&times;</span>
+            <h2>Tester l'email</h2>
+            <form onsubmit="submitTestEmail(event)">
+                <div class="form-group">
+                    <label>Adresse email de test</label>
+                    <input type="email" name="test_email" required>
+                </div>
+                <button type="submit" class="btn-primary">Envoyer</button>
+            </form>
+        </div>
+    </div>
+
     <script>
     function testEmail() {
-        const email = prompt('Entrez un email pour tester:');
-        if (!email) return;
-        
-        const formData = new FormData();
+        document.getElementById('modal-testEmail').classList.add('active');
+    }
+
+    function submitTestEmail(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
         formData.append('action', 'test_email');
-        formData.append('test_email', email);
         
         fetch('admin.php', { method: 'POST', body: formData })
             .then(r => r.text())
-            .then(() => window.location.reload());
+            .then(() => {
+                document.getElementById('modal-testEmail').classList.remove('active');
+                e.target.reset();
+                showNotification('Email de test envoyé !', 'success');
+            })
+            .catch(() => showNotification('Erreur lors de l\'envoi', 'error'));
+    }
+
+    function showNotification(message, type) {
+        const notif = document.getElementById('notification');
+        notif.className = 'notification ' + type;
+        notif.textContent = message;
+        notif.style.display = 'block';
+        setTimeout(() => notif.style.display = 'none', 3000);
     }
     </script>
+    
+    <div id="notification" class="notification"></div>
 </body>
 </html>

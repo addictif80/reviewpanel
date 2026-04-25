@@ -244,9 +244,10 @@ if (isset($_GET['logout'])) {
                                 <div class="site-description"><?= htmlspecialchars($site['description'] ?? '') ?></div>
                                 
                                 <?php
-                                $stmt = $pdo->prepare('SELECT COUNT(*) as cnt, AVG(rating) as avg FROM reviews WHERE site_id = ? AND status = "approved"');
+                                $stmt = $pdo->prepare('SELECT * FROM reviews WHERE site_id = ? AND status = "approved" ORDER BY created_at DESC');
                                 $stmt->execute([$site['id']]);
-                                $stats = $stmt->fetch();
+                                $reviewsData = $stmt->fetchAll();
+                                $reviewsJson = json_encode($reviewsData);
                                 ?>
                                 <div class="site-stats">
                                     <div class="stat">
@@ -261,7 +262,7 @@ if (isset($_GET['logout'])) {
                                 
                                 <div class="site-actions">
                                     <button onclick="showReviews(<?= $site['id'] ?>)">Gérer les avis</button>
-                                    <button onclick="showWidget(<?= $site['id'] ?>, '<?= htmlspecialchars($site['name']) ?>')">Widget</button>
+                                    <button onclick='showWidget(<?= $site['id'] ?>, <?= json_encode($site['name']) ?>, <?= $reviewsJson ?>)'>Widget</button>
                                     <button class="delete-btn" onclick="deleteSite(<?= $site['id'] ?>)">Supprimer</button>
                                 </div>
                             </div>
@@ -326,11 +327,34 @@ if (isset($_GET['logout'])) {
         <div class="modal-content">
             <span class="close" onclick="hideModal('widget')">&times;</span>
             <h2>Widget - <span id="widgetSiteName"></span></h2>
+            
+            <div class="widget-preview">
+                <h4>Aperçu</h4>
+                <div class="widget-preview-frame" id="widgetPreviewContent">
+                    <div style="text-align:center;color:#666;padding:2rem;">Chargement...</div>
+                </div>
+            </div>
+            
             <p>Copiez ce code pour afficher les avis sur votre site:</p>
             <textarea id="embedCode" readonly></textarea>
             <button class="btn-primary" onclick="copyEmbedCode()">Copier le code</button>
         </div>
     </div>
+
+    <!-- Modal: Confirmation -->
+    <div id="modal-confirm" class="modal-confirm">
+        <div class="modal-content">
+            <h3 id="confirmTitle">Confirmation</h3>
+            <p id="confirmMessage"></p>
+            <div class="confirm-actions">
+                <button class="btn-cancel" onclick="hideModal('confirm')">Annuler</button>
+                <button class="btn-confirm" id="confirmYes">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification toast -->
+    <div id="notification" class="modal-notification"></div>
 
     <script src="js/app.js"></script>
 </body>
