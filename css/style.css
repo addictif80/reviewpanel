@@ -345,17 +345,48 @@ body {
     color: #155724;
 }
 
-.review-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
 .review-actions button {
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
     border-radius: 4px;
     cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--white);
+    position: relative;
+    z-index: 100;
+    pointer-events: auto;
+}
+
+.review-actions button * {
+    pointer-events: none;
+}
+
+.review-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    position: relative;
+    z-index: 100;
+}
+
+.review-actions button:hover {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+}
+
+.review-actions .delete-btn {
+    color: var(--danger);
+}
+
+.approve-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+}
+
+.approve-btn:hover {
+    background: var(--primary-dark);
 }
 
 .approve-btn {
@@ -437,7 +468,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.5);
-    z-index: 1500;
+    z-index: 9999;
     display: none;
     align-items: center;
     justify-content: center;

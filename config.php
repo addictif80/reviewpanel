@@ -11,7 +11,48 @@ define('SMTP_PASS', 'your-app-password');
 define('SMTP_FROM', 'noreply@reviewpanel.com');
 
 define('APP_URL', 'http://localhost');
-define('APP_SECRET', 'change-this-secret-key');
+define('APP_SECRET', bin2hex(random_bytes(24)));
+
+function runMigrations() {
+    static $run = false;
+    if ($run) return;
+    $run = true;
+    
+    try {
+        $pdo = getDB();
+        
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS migrations (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+        
+        $migrations = [
+            '001_add_auto_approve' => "ALTER TABLE widgets ADD COLUMN auto_approve TINYINT(1) DEFAULT 0"
+        ];
+        
+        foreach ($migrations as $name => $sql) {
+            $stmt = $pdo->prepare('SELECT id FROM migrations WHERE name = ?');
+            $stmt->execute([$name]);
+            
+            if (!$stmt->fetch()) {
+                try {
+                    $pdo->exec($sql);
+                    $pdo->prepare('INSERT INTO migrations (name) VALUES (?)')->execute([$name]);
+                } catch (PDOException $e) {
+                    if ($e->getCode() != '1060') throw $e;
+                    $pdo->prepare('INSERT INTO migrations (name) VALUES (?)')->execute([$name]);
+                }
+            }
+        }
+    } catch (Exception $e) {
+        error_log('Migration error: ' . $e->getMessage());
+    }
+}
+
+runMigrations();
 
 function getDB() {
     static $pdo = null;

@@ -17,6 +17,10 @@ function showConfirm(title, message, callback) {
         document.getElementById('modal-confirm').classList.remove('active');
         callback();
     };
+    
+    document.querySelector('#modal-confirm .btn-cancel').onclick = function() {
+        document.getElementById('modal-confirm').classList.remove('active');
+    };
 }
 
 function showTab(tab) {
@@ -56,13 +60,20 @@ function showReviews(siteId) {
                             <span class="review-status ${review.status}">${review.status === 'pending' ? 'En attente' : 'Approuvé'}</span>
                         </div>
                         <div class="review-actions">
-                            ${review.status === 'pending' ? '<button class="approve-btn" onclick="approveReview(' + review.id + ')">Approuver</button>' : ''}
-                            <button class="delete-btn" onclick="deleteReview(${review.id})">Supprimer</button>
+                            ${review.status === 'pending' ? '<button class="approve-btn" id="approve-' + review.id + '" data-id="' + review.id + '">Approuver</button>' : ''}
+                            <button class="delete-btn" id="delete-' + review.id + '" data-id="' + review.id + '">Supprimer</button>
                         </div>
                     </div>
                 `).join('');
             }
         });
+    
+    document.getElementById('reviewsList').querySelectorAll('.delete-btn').forEach(btn => {
+        btn.onclick = function() { deleteReview(this.dataset.id); };
+    });
+    document.getElementById('reviewsList').querySelectorAll('.approve-btn').forEach(btn => {
+        btn.onclick = function() { approveReview(this.dataset.id); };
+    });
     
     showModal('reviews');
 }
@@ -76,15 +87,19 @@ function getStars(rating) {
 }
 
 function deleteReview(id) {
+    console.log('deleteReview called with id:', id);
     showConfirm('Supprimer un avis', 'Êtes-vous sûr de vouloir supprimer cet avis ?', function() {
         const formData = new FormData();
         formData.append('action', 'delete_review');
-        formData.append('review_id', id);
+        formData.append('review_id', parseInt(id));
         
         fetch('index.php', { method: 'POST', body: formData })
-            .then(() => {
+            .then(response => {
                 showNotification('Avis supprimé');
                 showReviews(currentSiteId);
+            })
+            .catch(error => {
+                showNotification('Erreur lors de la suppression', 'error');
             });
     });
 }
@@ -92,7 +107,7 @@ function deleteReview(id) {
 function approveReview(id) {
     const formData = new FormData();
     formData.append('action', 'approve_review');
-    formData.append('review_id', id);
+    formData.append('review_id', parseInt(id));
     
     fetch('index.php', { method: 'POST', body: formData })
         .then(() => {
@@ -202,10 +217,14 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-document.querySelectorAll('.modal').forEach(modal => {
+document.querySelectorAll('.modal, .modal-confirm').forEach(modal => {
     modal.addEventListener('click', function(e) {
         if (e.target === this) {
             this.classList.remove('active');
         }
     });
+});
+
+document.getElementById('notification').addEventListener('click', function() {
+    this.classList.remove('show');
 });

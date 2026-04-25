@@ -281,7 +281,7 @@ if (isset($_GET['logout'])) {
                                 <div class="site-actions">
                                     <button onclick="showReviews(<?= $site['id'] ?>)">Gérer les avis</button>
                                     <button onclick='showWidget(<?= $site['id'] ?>, <?= json_encode($site['name']) ?>, <?= $reviewsJson ?>)'>Widget</button>
-                                    <button class="delete-btn" onclick="deleteSite(<?= $site['id'] ?>)">Supprimer</button>
+                                    <button class="delete-btn" onclick="event.stopPropagation();deleteSite(<?= $site['id'] ?>)">Supprimer</button>
                                 </div>
                             </div>
                         <?php endforeach; ?>
