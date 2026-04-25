@@ -75,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     style VARCHAR(50) DEFAULT 'light',
                     show_rating TINYINT(1) DEFAULT 1,
                     show_count TINYINT(1) DEFAULT 1,
+                    auto_approve TINYINT(1) DEFAULT 0,
                     FOREIGN KEY (site_id) REFERENCES sites(id) ON DELETE CASCADE
                 )");
                 $pdo->exec("CREATE TABLE IF NOT EXISTS settings (

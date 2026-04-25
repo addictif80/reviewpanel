@@ -37,7 +37,7 @@ function showReviews(siteId) {
     currentSiteId = siteId;
     document.getElementById('reviewSiteId').value = siteId;
     
-    fetch('api/reviews.php?site_id=' + siteId)
+    fetch('api/all-reviews.php?site_id=' + siteId)
         .then(r => r.json())
         .then(data => {
             const list = document.getElementById('reviewsList');
@@ -45,14 +45,18 @@ function showReviews(siteId) {
                 list.innerHTML = '<div class="empty-state"><h3>Aucun avis</h3></div>';
             } else {
                 list.innerHTML = data.map(review => `
-                    <div class="review-item">
+                    <div class="review-item ${review.status === 'pending' ? 'pending' : ''}">
                         <div class="review-header">
                             <strong>${escapeHtml(review.reviewer_name)}</strong>
                             <span class="review-stars">${getStars(review.rating)}</span>
                         </div>
                         ${review.title ? '<div class="review-title">' + escapeHtml(review.title) + '</div>' : ''}
                         <div class="review-content">${escapeHtml(review.content)}</div>
-                        <div style="margin-top:0.5rem;">
+                        <div class="review-meta">
+                            <span class="review-status ${review.status}">${review.status === 'pending' ? 'En attente' : 'Approuvé'}</span>
+                        </div>
+                        <div class="review-actions">
+                            ${review.status === 'pending' ? '<button class="approve-btn" onclick="approveReview(' + review.id + ')">Approuver</button>' : ''}
                             <button class="delete-btn" onclick="deleteReview(${review.id})">Supprimer</button>
                         </div>
                     </div>
@@ -85,6 +89,18 @@ function deleteReview(id) {
     });
 }
 
+function approveReview(id) {
+    const formData = new FormData();
+    formData.append('action', 'approve_review');
+    formData.append('review_id', id);
+    
+    fetch('index.php', { method: 'POST', body: formData })
+        .then(() => {
+            showNotification('Avis approuvé');
+            showReviews(currentSiteId);
+        });
+}
+
 function deleteSite(id) {
     showConfirm('Supprimer un site', 'Êtes-vous sûr de vouloir supprimer ce site et tous ses avis ?', function() {
         const formData = new FormData();
@@ -101,21 +117,38 @@ function deleteSite(id) {
 
 function showWidget(siteId, siteName, reviewsData) {
     document.getElementById('widgetSiteName').textContent = siteName;
+    document.getElementById('widgetSiteId').value = siteId;
     
-    const formData = new FormData();
-    formData.append('action', 'create_widget');
-    formData.append('site_id', siteId);
+    fetch('api/widget-settings.php?site_id=' + siteId)
+        .then(r => r.json())
+        .then(settings => {
+            document.getElementById('autoApprove').checked = settings.auto_approve == 1;
+            updateWidgetEmbed(siteId, reviewsData);
+            showModal('widget');
+        })
+        .catch(() => {
+            updateWidgetEmbed(siteId, reviewsData);
+            showModal('widget');
+        });
+}
+
+function updateWidget() {
+    const form = document.getElementById('widgetForm');
+    const formData = new FormData(form);
     
     fetch('index.php', { method: 'POST', body: formData })
         .then(r => r.text())
         .then(() => {
-            const origin = window.location.origin;
-            const embedCode = '<div id="review-widget-' + siteId + '"></div>\n<script src="' + origin + '/widget.js?site=' + siteId + '" async></script>';
-            document.getElementById('embedCode').value = embedCode;
-            
-            renderWidgetPreview(siteId, reviewsData);
-            showModal('widget');
+            showNotification('Paramètres enregistrés');
         });
+}
+
+function updateWidgetEmbed(siteId, reviewsData) {
+    const origin = window.location.origin;
+    const embedCode = '<div id="review-widget-' + siteId + '"></div>\n<script src="' + origin + '/widget.js?site=' + siteId + '" async></script>';
+    document.getElementById('embedCode').value = embedCode;
+    
+    renderWidgetPreview(siteId, reviewsData);
 }
 
 function renderWidgetPreview(siteId, reviews) {

@@ -321,6 +321,49 @@ body {
     color: var(--text-light);
 }
 
+.review-item.pending {
+    border-left: 4px solid #f39c12;
+}
+
+.review-meta {
+    margin-top: 0.5rem;
+}
+
+.review-status {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.review-status.pending {
+    background: #fef3cd;
+    color: #856404;
+}
+
+.review-status.approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.review-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.review-actions button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.approve-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+}
+
 #embedCode {
     width: 100%;
     min-height: 80px;
@@ -369,6 +412,9 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 2000;
     animation: slideIn 0.3s ease;
+}
+
+.modal-notification {
     display: none;
 }
 
@@ -402,11 +448,16 @@ body {
 }
 
 .modal-confirm .modal-content {
+    display: none;
     background: var(--white);
     padding: 2rem;
     border-radius: 12px;
     max-width: 400px;
     text-align: center;
+}
+
+.modal-confirm.active .modal-content {
+    display: block;
 }
 
 .modal-confirm h3 {

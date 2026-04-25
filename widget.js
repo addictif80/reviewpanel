@@ -92,7 +92,11 @@ $baseUrl = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTT
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
-                widget.innerHTML = '<div class="rw-success">Merci ! Votre avis a été soumis et sera publié après modération.</div>';
+                if (data.published) {
+                    widget.innerHTML = '<div class="rw-success">Merci ! Votre avis a été publié.</div>';
+                } else {
+                    widget.innerHTML = '<div class="rw-success">Merci ! Votre avis a été soumis et sera publié après modération.</div>';
+                }
             } else {
                 widget.innerHTML = '<div class="rw-error">Erreur: ' + (data.error || 'Impossible de soumettre l\'avis') + '</div>';
             }

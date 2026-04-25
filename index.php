@@ -114,6 +114,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = 'Site supprimé';
         }
         
+        if ($_POST['action'] === 'approve_review' && isLoggedIn()) {
+            $review_id = intval($_POST['review_id']);
+            $pdo = getDB();
+            $stmt = $pdo->prepare('UPDATE reviews SET status = "approved" WHERE id = ?');
+            $stmt->execute([$review_id]);
+            $success = 'Avis approuvé';
+        }
+        
         if ($_POST['action'] === 'delete_review' && isLoggedIn()) {
             $review_id = intval($_POST['review_id']);
             $pdo = getDB();
@@ -124,6 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($_POST['action'] === 'create_widget' && isLoggedIn()) {
             $site_id = intval($_POST['site_id']);
+            $auto_approve = isset($_POST['auto_approve']) ? 1 : 0;
             $pdo = getDB();
             
             $stmt = $pdo->prepare('SELECT id FROM widgets WHERE site_id = ?');
@@ -131,11 +140,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $widget = $stmt->fetch();
             
             if ($widget) {
-                $stmt = $pdo->prepare('UPDATE widgets SET style = ? WHERE id = ?');
-                $stmt->execute([$_POST['style'] ?? 'light', $widget['id']]);
+                $stmt = $pdo->prepare('UPDATE widgets SET style = ?, auto_approve = ? WHERE id = ?');
+                $stmt->execute([$_POST['style'] ?? 'light', $auto_approve, $widget['id']]);
             } else {
-                $stmt = $pdo->prepare('INSERT INTO widgets (site_id) VALUES (?)');
-                $stmt->execute([$site_id]);
+                $stmt = $pdo->prepare('INSERT INTO widgets (site_id, auto_approve) VALUES (?, ?)');
+                $stmt->execute([$site_id, $auto_approve]);
             }
             
             $success = 'Widget créé !';
@@ -244,20 +253,29 @@ if (isset($_GET['logout'])) {
                                 <div class="site-description"><?= htmlspecialchars($site['description'] ?? '') ?></div>
                                 
                                 <?php
-                                $stmt = $pdo->prepare('SELECT * FROM reviews WHERE site_id = ? AND status = "approved" ORDER BY created_at DESC');
+                                $stmt = $pdo->prepare('SELECT * FROM reviews WHERE site_id = ? ORDER BY created_at DESC');
                                 $stmt->execute([$site['id']]);
-                                $reviewsData = $stmt->fetchAll();
+                                $allReviews = $stmt->fetchAll();
+                                $approvedReviews = array_filter($allReviews, function($r) { return $r['status'] === 'approved'; });
+                                $reviewsData = array_values($approvedReviews);
                                 $reviewsJson = json_encode($reviewsData);
                                 ?>
                                 <div class="site-stats">
                                     <div class="stat">
-                                        <div class="stat-value"><?= number_format($stats['avg'] ?? 0, 1) ?></div>
+                                        <div class="stat-value"><?= count($allReviews) > 0 ? number_format(array_sum(array_column($allReviews, 'rating')) / count($allReviews), 1) : '0.0' ?></div>
                                         <div class="stat-label">Note moyenne</div>
                                     </div>
                                     <div class="stat">
-                                        <div class="stat-value"><?= $stats['cnt'] ?? 0 ?></div>
-                                        <div class="stat-label">Avis</div>
+                                        <div class="stat-value"><?= count($approvedReviews) ?></div>
+                                        <div class="stat-label">Avis validés</div>
                                     </div>
+                                    <?php $pending = count($allReviews) - count($approvedReviews); ?>
+                                    <?php if ($pending > 0): ?>
+                                    <div class="stat">
+                                        <div class="stat-value" style="color: #f39c12;"><?= $pending ?></div>
+                                        <div class="stat-label">En attente</div>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <div class="site-actions">
@@ -327,6 +345,19 @@ if (isset($_GET['logout'])) {
         <div class="modal-content">
             <span class="close" onclick="hideModal('widget')">&times;</span>
             <h2>Widget - <span id="widgetSiteName"></span></h2>
+            
+            <form method="POST" id="widgetForm" style="margin-bottom: 1.5rem;">
+                <input type="hidden" name="action" value="create_widget">
+                <input type="hidden" name="site_id" id="widgetSiteId">
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="auto_approve" id="autoApprove" onchange="updateWidget()">
+                        Approuver automatiquement les avis
+                    </label>
+                    <small style="color: var(--text-light);">Les avis seront publiés immédiatement sans modération</small>
+                </div>
+            </form>
             
             <div class="widget-preview">
                 <h4>Aperçu</h4>
